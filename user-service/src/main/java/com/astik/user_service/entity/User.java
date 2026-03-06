@@ -3,7 +3,6 @@ import com.astik.user_service.enums.Role;
 import com.astik.user_service.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;

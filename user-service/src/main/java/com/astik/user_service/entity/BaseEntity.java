@@ -41,4 +41,7 @@ public abstract class BaseEntity implements Serializable {
 
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
+
+    @Version
+    private Long version;
 }
