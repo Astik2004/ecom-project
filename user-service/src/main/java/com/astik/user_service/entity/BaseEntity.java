@@ -1,5 +1,6 @@
 package com.astik.user_service.entity;
 
+import com.astik.user_service.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,18 +10,17 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@MappedSuperclass
 @Getter
 @Setter
-@MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public abstract class BaseEntity implements Serializable {
+public abstract class BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
     @CreatedDate
@@ -32,16 +32,21 @@ public abstract class BaseEntity implements Serializable {
     private LocalDateTime updatedAt;
 
     @CreatedBy
-    @Column(name = "created_by", updatable = false, length = 255)
+    @Column(name = "created_by", updatable = false)
     private String createdBy;
 
     @LastModifiedBy
-    @Column(name = "updated_by", length = 255)
+    @Column(name = "updated_by")
     private String updatedBy;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 30)
+    private UserStatus status = UserStatus.ACTIVE;
 
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 
     @Version
+    @Column(name = "version")
     private Long version;
 }

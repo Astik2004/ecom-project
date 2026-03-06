@@ -1,4 +1,5 @@
 package com.astik.user_service.entity;
+
 import com.astik.user_service.enums.Role;
 import com.astik.user_service.enums.UserStatus;
 import jakarta.persistence.*;
@@ -11,11 +12,11 @@ import java.time.LocalDateTime;
 @Table(
         name = "users",
         indexes = {
-                @Index(name = "idx_user_email",  columnList = "email"),
-                @Index(name = "idx_user_phone",  columnList = "phone_number"),
-                @Index(name = "idx_user_status", columnList = "status"),
-                @Index(name = "idx_user_role",   columnList = "role"),
-                @Index(name = "idx_user_created",columnList = "created_at")
+                @Index(name = "idx_user_email",   columnList = "email"),
+                @Index(name = "idx_user_phone",   columnList = "phone_number"),
+                @Index(name = "idx_user_status",  columnList = "status"),
+                @Index(name = "idx_user_role",    columnList = "role"),
+                @Index(name = "idx_user_created", columnList = "created_at")
         }
 )
 @SQLRestriction("is_deleted = false")
@@ -24,7 +25,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User extends BaseEntity{
+public class User extends BaseEntity {
 
     @Column(name = "first_name", nullable = false, length = 50)
     private String firstName;
@@ -44,11 +45,6 @@ public class User extends BaseEntity{
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 20)
     private Role role;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 30)
-    @Builder.Default
-    private UserStatus status = UserStatus.PENDING_VERIFICATION;
 
     @Column(name = "profile_picture_url")
     private String profilePictureUrl;
@@ -86,14 +82,12 @@ public class User extends BaseEntity{
     @Column(name = "password_reset_token_expiry")
     private LocalDateTime passwordResetTokenExpiry;
 
-    // ─── Domain Methods ────────────────────────────────────────────────────────
-
     public boolean isAccountLocked() {
         return accountLockedUntil != null && accountLockedUntil.isAfter(LocalDateTime.now());
     }
 
     public boolean isActive() {
-        return UserStatus.ACTIVE.equals(this.status);
+        return UserStatus.ACTIVE.equals(this.getStatus());
     }
 
     public String getFullName() {

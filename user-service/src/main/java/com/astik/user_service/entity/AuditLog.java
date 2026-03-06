@@ -1,65 +1,81 @@
 package com.astik.user_service.entity;
 
+import com.astik.user_service.enums.AuditAction;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(
         name = "audit_logs",
         indexes = {
-                @Index(name = "idx_audit_user_id",   columnList = "user_id"),
-                @Index(name = "idx_audit_action",    columnList = "action"),
-                @Index(name = "idx_audit_created",   columnList = "created_at")
+                @Index(name = "idx_audit_entity_id",   columnList = "entity_id"),
+                @Index(name = "idx_audit_action",      columnList = "action"),
+                @Index(name = "idx_audit_created_at",  columnList = "created_at"),
+                @Index(name = "idx_audit_performed_by",columnList = "performed_by")
         }
 )
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EntityListeners(AuditingEntityListener.class)
 public class AuditLog {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Column(name = "user_id")
-    private UUID userId;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private AuditAction action;
 
-    @Column(name = "performed_by", length = 255)
+    @Column(name = "entity_name", nullable = false)
+    private String entityName;
+
+    @Column(name = "entity_id")
+    private Long entityId;
+
+    @Column(name = "old_values", length = 4000)
+    private String oldValues;
+
+    @Column(name = "new_values", length = 4000)
+    private String newValues;
+
+    @Column(name = "changed_fields", length = 1000)
+    private String changedFields;
+
+    @Column(name = "performed_by", nullable = false)
     private String performedBy;
 
-    @Column(name = "action", nullable = false, length = 100)
-    private String action;
-
-    @Column(name = "resource", length = 100)
-    private String resource;
-
-    @Column(name = "resource_id", length = 255)
-    private String resourceId;
-
-    @Column(name = "old_value", columnDefinition = "TEXT")
-    private String oldValue;
-
-    @Column(name = "new_value", columnDefinition = "TEXT")
-    private String newValue;
+    @Column(name = "performed_by_role", length = 30)
+    private String performedByRole;
 
     @Column(name = "ip_address", length = 50)
     private String ipAddress;
 
-    @Column(name = "user_agent", columnDefinition = "TEXT")
+    @Column(name = "user_agent", length = 500)
     private String userAgent;
 
-    @Column(name = "status", length = 20)
-    private String status;
+    @Column(name = "request_uri", length = 500)
+    private String requestUri;
 
-    @Column(name = "error_message", columnDefinition = "TEXT")
-    private String errorMessage;
+    @Column(name = "request_method", length = 10)
+    private String requestMethod;
 
+    @Column(length = 500)
+    private String description;
+
+    private Boolean success;
+
+    @Column(name = "failure_reason", length = 500)
+    private String failureReason;
+
+    @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 }
