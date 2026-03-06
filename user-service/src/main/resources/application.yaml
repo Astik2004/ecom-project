@@ -3,9 +3,9 @@ spring:
     name: user-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/ecomdb
+    url: jdbc:postgresql://postgres:5432/userdb
     username: postgres
-    password: root
+    password: postgres
     driver-class-name: org.postgresql.Driver
 
   jpa:
