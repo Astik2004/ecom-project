@@ -1,8 +1,10 @@
-name: Spring Boot CI + Docker
+name: User Service CI + Docker
 
 on:
   push:
-    branches: ["main"]
+    branches: ["master"]
+    paths:
+      - 'user-service/**'
 
 jobs:
 
@@ -24,15 +26,17 @@ jobs:
 
       - name: Build Spring Boot JAR
         run: mvn clean package -DskipTests
+        working-directory: user-service
 
       - name: Build Docker Image
-        run: docker build -t springboot-api:latest .
+        run: docker build -t user-service:latest .
+        working-directory: user-service
 
       - name: Save Docker Image
-        run: docker save springboot-api:latest -o springboot-api.tar
+        run: docker save user-service:latest -o user-service.tar
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: docker-image
-          path: springboot-api.tar
+          name: user-service-image
+          path: user-service.tar
