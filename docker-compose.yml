@@ -1,7 +1,6 @@
 version: "3.8"
 
 services:
-
   app:
     image: astik2004/user-service:latest
     container_name: user-service
@@ -9,13 +8,17 @@ services:
       - "8081:8081"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ecomdb?currentSchema=public&options=-c%20timezone=Asia/Kolkata
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      # Ye Redis host ko 'localhost' se badal kar 'redis' kar dega
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     restart: always
     pull_policy: always
 
@@ -27,7 +30,7 @@ services:
     restart: always
 
   postgres:
-    image: postgres:17
+    image: postgres:16
     container_name: postgres
     ports:
       - "5433:5432"
@@ -35,9 +38,15 @@ services:
       POSTGRES_DB: ecomdb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      TZ: Asia/Kolkata
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ecomdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
