@@ -3,9 +3,10 @@ package com.astik.user_service.dto;
 import com.astik.user_service.enums.AuditAction;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public record AuditLogResponse(
-        Long id,
+        UUID id,
         AuditAction action,
         String entityName,
         Long entityId, // Entity mein aapne Long rakha hai, UUID nahi
