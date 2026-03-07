@@ -1,5 +1,6 @@
 package com.astik.user_service.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -14,6 +15,7 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 @Component
 @Slf4j
@@ -64,6 +66,65 @@ public class JwtUtils {
                     .compact();
     }
 
+    public boolean isAccessTokenValid(String token, UserDetails userDetails) {
+        return isTokenValid(token, userDetails, "ACCESS");
+    }
 
+    public boolean isRefreshTokenValid(String token, UserDetails userDetails) {
+        return isTokenValid(token, userDetails, "REFRESH");
+    }
 
+    private boolean isTokenValid(String token, UserDetails userDetails, String expectedTokenType) {
+        try {
+            final String extractedUsername = extractUsername(token);
+            final String extractedTokenType = extractTokenType(token);
+
+            return (extractedUsername.equals(userDetails.getUsername()))
+                    && (expectedTokenType.equals(extractedTokenType))
+                    && !isTokenExpired(token);
+        } catch (Exception e) {
+            log.warn("JWT validation failed: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+    public String extractUserId(String token) {
+        return extractClaim(token, c -> c.get("userId",String.class));
+    }
+    public String extractRole(String token){
+        return extractClaim(token, c -> c.get("role", String.class));
+    }
+    public String extractTokenType(String token) {
+        return extractClaim(token, c -> c.get("tokenType", String.class));
+    }
+    public Date   extractExpiration(String token){
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> resolver) {
+        return resolver.apply(extractAllClaims(token));
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(signingKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    public long getAccessExpiration() {
+        return accessExpiration;
+    }
+
+    public long getRefreshExpiration() {
+        return refreshExpiration;
+    }
 }
