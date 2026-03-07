@@ -1,4 +1,4 @@
-name: User Service CI + Docker
+name: User Service CI + Docker + SonarCloud
 
 on:
   push:
@@ -22,7 +22,15 @@ jobs:
           cache: maven
 
       - name: Build Spring Boot JAR
-        run: mvn clean package -DskipTests
+        run: mvn clean verify
+        working-directory: user-service
+
+      - name: SonarCloud Scan
+        run: mvn sonar:sonar \
+          -Dsonar.projectKey=user-service \
+          -Dsonar.organization=your-org \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
         working-directory: user-service
 
       - name: Login to Docker Hub
