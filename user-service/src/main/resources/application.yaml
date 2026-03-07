@@ -1,3 +1,12 @@
+springdoc:
+  # Change the Swagger UI path (e.g., http://localhost:8080/api-docs.html)
+  swagger-ui:
+    path: /api-docs.html
+  api-docs:
+    path: /api-spec
+  show-actuator: true
+  writer-with-default-pretty-printer: true
+
 spring:
   application:
     name: user-service
