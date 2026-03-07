@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -21,12 +23,8 @@ jobs:
           java-version: "21"
           cache: maven
 
-      - name: Build Spring Boot JAR (skip tests)
-        run: mvn clean package -DskipTests -Pdocker
-        working-directory: user-service
-
-      - name: SonarCloud Scan (skip tests)
-        run: mvn sonar:sonar -Dsonar.login=${{ secrets.SONAR_TOKEN }} -DskipTests -Pdocker
+      - name: Build Spring Boot JAR and SonarCloud Scan
+        run: mvn clean package sonar:sonar -Dsonar.token=${{ secrets.SONAR_TOKEN }} -Dsonar.projectKey=Astik2004_ecom-project -DskipTests -Pdocker
         working-directory: user-service
 
       - name: Login to Docker Hub
