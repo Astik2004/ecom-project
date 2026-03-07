@@ -26,11 +26,7 @@ jobs:
         working-directory: user-service
 
       - name: SonarCloud Scan
-        run: mvn sonar:sonar \
-          -Dsonar.projectKey=user-service \
-          -Dsonar.organization=your-org \
-          -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+        run: mvn clean verify sonar:sonar -Dsonar.login=${{ secrets.SONAR_TOKEN }}
         working-directory: user-service
 
       - name: Login to Docker Hub
