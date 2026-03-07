@@ -2,8 +2,8 @@ package com.astik.user_service.dto;
 
 public record AuthResponse(
         String accessToken,
-        String tokenType,
-        Long userId,
-        String email,
-        String role
+        String refreshToken,
+        long expiresIn,
+        UserResponse user,
+        String message
 ) {}
