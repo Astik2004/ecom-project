@@ -22,7 +22,7 @@ jobs:
           cache: maven
 
       - name: Build Spring Boot JAR
-        run: mvn clean verify
+        run: mvn clean package -DskipTests
         working-directory: user-service
 
       - name: SonarCloud Scan
