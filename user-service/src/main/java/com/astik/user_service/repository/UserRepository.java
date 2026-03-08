@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -44,18 +45,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
         WHERE u.id = :id
     """)
     void updateOnSuccessfulLogin(
-            @Param("id") Long id,
+            @Param("id") UUID id,
             @Param("loginAt") LocalDateTime loginAt);
 
     @Modifying
     @Transactional
     @Query("UPDATE User u SET u.failedLoginAttempts = u.failedLoginAttempts + 1 WHERE u.id = :id")
-    void incrementFailedAttempts(@Param("id") Long id);
+    void incrementFailedAttempts(@Param("id") UUID id);
 
     @Modifying
     @Transactional
     @Query("UPDATE User u SET u.accountLockedUntil = :until, u.status = 'SUSPENDED' WHERE u.id = :id")
-    void lockAccount(@Param("id") Long id, @Param("until") LocalDateTime until);
+    void lockAccount(@Param("id") UUID id, @Param("until") LocalDateTime until);
 
     @Modifying
     @Transactional

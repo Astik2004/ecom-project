@@ -25,6 +25,7 @@ public class UserMapper {
                 user.getProfilePictureUrl(),
                 user.getIsEmailVerified(),
                 user.getIsPhoneVerified(),
+                user.getEmailVerificationToken(),
                 user.getLastLoginAt(),
 
                 // Admin fields left null for regular users
@@ -52,6 +53,7 @@ public class UserMapper {
                 user.getProfilePictureUrl(),
                 user.getIsEmailVerified(),
                 user.getIsPhoneVerified(),
+                user.getEmailVerificationToken(),
                 user.getLastLoginAt(),
 
                 // Exposing Admin fields

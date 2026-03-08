@@ -39,7 +39,7 @@ public class AuditLog {
     private String entityName;
 
     @Column(name = "entity_id")
-    private Long entityId;
+    private UUID entityId;
 
     @Column(name = "old_values", length = 4000)
     private String oldValues;

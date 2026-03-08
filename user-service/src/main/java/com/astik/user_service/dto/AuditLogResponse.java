@@ -9,7 +9,7 @@ public record AuditLogResponse(
         UUID id,
         AuditAction action,
         String entityName,
-        Long entityId, // Entity mein aapne Long rakha hai, UUID nahi
+        UUID entityId, // Entity mein aapne Long rakha hai, UUID nahi
         String oldValues,
         String newValues,
         String changedFields,

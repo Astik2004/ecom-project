@@ -9,17 +9,17 @@ public interface AuditService {
     /**
      * Logs a successful action for a given user and entity.
      */
-    void logSuccess(UUID userId,
+    void logSuccess(
                     String performedBy,
                     AuditAction action,
                     String entityName,
-                    Long entityId,
+                    UUID entityId,
                     String ipAddress);
 
     /**
      * Logs a failed action for a given user and entity.
      */
-    void logFailure(UUID userId,
+    void logFailure(
                     String performedBy,
                     AuditAction action,
                     String entityName,
@@ -29,11 +29,11 @@ public interface AuditService {
     /**
      * Logs an action with detailed old and new values and changed fields.
      */
-    void logWithDetails(UUID userId,
+    void logWithDetails(
                         String performedBy,
                         AuditAction action,
                         String entityName,
-                        Long entityId,
+                        UUID entityId,
                         String oldValues,
                         String newValues,
                         String changedFields,

@@ -46,7 +46,17 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
+                        // 👇 YAHAN CHANGES KIYE HAIN 👇
+                        .requestMatchers(
+                                "/api-spec/**",           // Aapka YAML wala custom JSON path
+                                "/api-docs.html",         // Aapka YAML wala custom UI HTML path
+                                "/swagger-ui/**",         // Swagger UI ke internal CSS/JS ke liye zaruri
+                                "/v3/api-docs/**",        // Safe side ke liye default paths
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
+
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/me").hasAnyRole("CUSTOMER", "ADMIN")
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

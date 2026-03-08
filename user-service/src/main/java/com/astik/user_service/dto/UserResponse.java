@@ -22,6 +22,7 @@ public record UserResponse(
         String profilePictureUrl,
         Boolean isEmailVerified,
         Boolean isPhoneVerified,
+        String emailVerificationToken,
         LocalDateTime lastLoginAt,
         Boolean accountLocked, // from isAccountLocked()
         Integer failedLoginAttempts,
