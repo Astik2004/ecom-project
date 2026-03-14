@@ -1,0 +1,73 @@
+spring:
+  application:
+    name: notification-service
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # New way — JsonDeserializer deprecated, ab ye use hota hai
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        # Koi bhi package trust karo — tum hi producer ho
+        spring.json.trusted.packages: "*"
+        # Type headers mat bhejo — user-service ne nahi bheje
+        spring.json.use.type.headers: false
+        # Seedha apni DTO class pe map karo
+        spring.json.value.default.type: com.astik.notification_service.dto.UserRegisteredEvent
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        spring.json.add.type.headers: false
+
+    # DLT ke liye retry config
+    listener:
+      ack-mode: RECORD
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:astikyadav4@gmail.com}
+    password: ${MAIL_PASSWORD:kjwtvcqjmcfxzkth}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: 8082
+
+app:
+  kafka:
+    topics:
+      user-registered: user.registered
+  mail:
+    from: ${MAIL_USERNAME:astikyadav4@gmail.com}
+    from-name: "Ecommerce App"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    com.astik.notification_service: DEBUG
+    org.springframework.kafka: INFO
+    org.springframework.mail: DEBUG
