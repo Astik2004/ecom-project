@@ -1,13 +1,15 @@
 package com.astik.user_service;
 
+import com.astik.user_service.config.AccountProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import java.util.TimeZone;
 
 @SpringBootApplication
-@EnableJpaAuditing
+@EnableConfigurationProperties(AccountProperties.class)
 public class UserServiceApplication {
 
 	public static void main(String[] args) {

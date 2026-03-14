@@ -1,0 +1,103 @@
+spring:
+  application:
+    name: user-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/ecomdb?currentSchema=public&options=-c%20timezone=Asia/Kolkata
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      pool-name: UserServiceHikariPool
+
+  jpa:
+    hibernate:
+      ddl-auto: update        # Flyway owns schema — never use update/create
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Kolkata
+        default_batch_fetch_size: 50
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true   # safe for first run on existing DB
+    validate-on-migrate: true
+  data:
+    redis:                      # spring.data.redis — correct key for Boot 3+/4.x
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all                 # strongest durability — waits for all replicas
+      retries: 3
+      properties:
+        enable.idempotence: true
+        spring.json.add.type.headers: false   # cleaner messages — no type header
+
+  threads:
+    virtual:
+      enabled: true             # Java 21 Project Loom virtual threads
+
+server:
+  port: 8081
+
+# ── JWT — matches YOUR JwtUtils @Value annotations exactly ──────
+application:
+  security:
+    jwt:
+      secret-key: "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970337336763979244226452948404D635166546A576E5A7234753778214125442A"
+      expiration: 900000              # 15 min in ms
+      refresh-token:
+        expiration: 604800000         # 7 days in ms
+  account:
+    max-failed-attempts: 5
+    lock-duration-minutes: 30
+    email-token-expiry-hours: 24
+    password-reset-token-expiry-minutes: 15
+
+# ── Kafka topic names ────────────────────────────────────────────
+app:
+  kafka:
+    topics:
+      user-registered: user.registered
+
+# ── Swagger UI ───────────────────────────────────────────────────
+springdoc:
+  swagger-ui:
+    path: /api-docs.html
+  api-docs:
+    path: /api-spec
+  show-actuator: true
+  writer-with-default-pretty-printer: true
+
+# ── Actuator ─────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ── Logging ──────────────────────────────────────────────────────
+logging:
+  level:
+    com.astik.user_service: DEBUG
+    org.springframework.security: INFO
+    org.springframework.kafka: WARN
+    org.hibernate.SQL: WARN
+    org.flywaydb: INFO

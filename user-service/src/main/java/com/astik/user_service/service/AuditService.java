@@ -6,37 +6,7 @@ import java.util.UUID;
 
 public interface AuditService {
 
-    /**
-     * Logs a successful action for a given user and entity.
-     */
-    void logSuccess(
-                    String performedBy,
-                    AuditAction action,
-                    String entityName,
-                    UUID entityId,
-                    String ipAddress);
-
-    /**
-     * Logs a failed action for a given user and entity.
-     */
-    void logFailure(
-                    String performedBy,
-                    AuditAction action,
-                    String entityName,
-                    String failureReason,
-                    String ipAddress);
-
-    /**
-     * Logs an action with detailed old and new values and changed fields.
-     */
-    void logWithDetails(
-                        String performedBy,
-                        AuditAction action,
-                        String entityName,
-                        UUID entityId,
-                        String oldValues,
-                        String newValues,
-                        String changedFields,
-                        String ipAddress,
-                        String userAgent);
+    void log(AuditAction action, String entityName, UUID entityId,
+             String performedBy, String ipAddress, String userAgent,
+             Boolean success, String failureReason);
 }

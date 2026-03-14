@@ -1,34 +1,59 @@
 version: "3.8"
 
 services:
-  app:
-    image: astik2004/user-service:latest
-    container_name: user-service
+
+  # ── Zookeeper ─────────────────────────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
     ports:
-      - "8081:8081"
+      - "2181:2181"
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ecomdb?currentSchema=public&options=-c%20timezone=Asia/Kolkata
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      # Ye Redis host ko 'localhost' se badal kar 'redis' kar dega
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    # NO healthcheck — nc is not in this image.
+    # Kafka's healthcheck guarantees Zookeeper is up anyway.
     restart: always
-    pull_policy: always
 
-  redis:
-    image: redis:latest
-    container_name: redis
+  # ── Kafka ──────────────────────────────────────────────────────
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
     ports:
-      - "6379:6379"
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    depends_on:
+      - zookeeper          # just wait for container to start, not healthy
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s    # give Kafka 30s to boot before first check
     restart: always
 
+  # ── Kafka UI ───────────────────────────────────────────────────
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: always
+
+  # ── Postgres ───────────────────────────────────────────────────
   postgres:
     image: postgres:16
     container_name: postgres
@@ -41,12 +66,50 @@ services:
       TZ: Asia/Kolkata
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d ecomdb"]
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: always
+
+  # ── Redis ──────────────────────────────────────────────────────
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: always
+
+  # ── User Service ───────────────────────────────────────────────
+  app:
+    image: astik2004/user-service:latest
+    container_name: user-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970337336763979244226452948404D635166546A576E5A7234753778214125442A"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    restart: always
+    pull_policy: always
 
 volumes:
   postgres_data:

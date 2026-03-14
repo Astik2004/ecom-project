@@ -1,22 +1,13 @@
+// service/AuthService.java
 package com.astik.user_service.service;
 
-import com.astik.user_service.dto.AuthResponse;
-import com.astik.user_service.dto.LoginRequest;
-import com.astik.user_service.dto.RegisterRequest;
-import jakarta.servlet.http.HttpServletRequest;
+import com.astik.user_service.dto.request.LoginRequest;
+import com.astik.user_service.dto.request.RegisterRequest;
+import com.astik.user_service.dto.response.AuthResponse;
 
 public interface AuthService {
-
-    // ─── Register ─────────────────────────────────────────────────────────────
-    AuthResponse register(RegisterRequest request, HttpServletRequest httpRequest);
-
-    // ─── Login ────────────────────────────────────────────────────────────────
-    AuthResponse login(LoginRequest request, HttpServletRequest httpRequest);
-
-    // ─── Logout ───────────────────────────────────────────────────────────────
-    void logout(String refreshToken, HttpServletRequest httpRequest);
-
-    // ─── Verify Email ─────────────────────────────────────────────────────────
-    void verifyEmail(String token, HttpServletRequest httpRequest);
-
+    AuthResponse register(RegisterRequest request);
+    AuthResponse login(LoginRequest request, String ipAddress, String userAgent);
+    AuthResponse refreshToken(String refreshToken);
+    void logout(String refreshToken);
 }
