@@ -1,4 +1,3 @@
-// config/KafkaConfig.java
 package com.astik.user_service.config;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
