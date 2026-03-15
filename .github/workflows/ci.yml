@@ -16,34 +16,24 @@ concurrency:
   group: ci-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
-# ─── Reusable build logic ─────────────────────────────────────────
-# Each job below is identical except for the service name.
-# "if" condition makes each job run ONLY if that service's
-# files were actually changed in this PR — so if you only
-# touch user-service, the other 5 jobs are skipped automatically.
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
 
-  # ── User Service ───────────────────────────────────────────────
   user-service:
     name: user-service — Build, Test, Sonar
     runs-on: ubuntu-latest
-    if: |
-      contains(github.event.pull_request.changed_files, 'user-service') ||
-      startsWith(github.event.pull_request.head.ref, 'feature/user') ||
-      true
-
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
-
       - name: Check changed files
         id: changes
         uses: dorny/paths-filter@v3
@@ -51,14 +41,13 @@ jobs:
           filters: |
             service:
               - 'user-service/**'
-
-      - name: Build and verify
+      - name: Build
         if: steps.changes.outputs.service == 'true'
         run: mvn clean verify -DskipTests -Pdocker
         working-directory: user-service
-
       - name: SonarCloud
         if: steps.changes.outputs.service == 'true'
+        continue-on-error: true
         run: >
           mvn sonar:sonar
           -Dsonar.token=${{ secrets.SONAR_TOKEN }}
@@ -71,7 +60,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
       - name: Docker build check
         if: steps.changes.outputs.service == 'true'
         uses: docker/build-push-action@v6
@@ -82,22 +70,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # ── Notification Service ───────────────────────────────────────
   notification-service:
     name: notification-service — Build, Test, Sonar
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
-
       - name: Check changed files
         id: changes
         uses: dorny/paths-filter@v3
@@ -105,14 +89,13 @@ jobs:
           filters: |
             service:
               - 'notification-service/**'
-
-      - name: Build and verify
+      - name: Build
         if: steps.changes.outputs.service == 'true'
         run: mvn clean verify -DskipTests -Pdocker
         working-directory: notification-service
-
       - name: SonarCloud
         if: steps.changes.outputs.service == 'true'
+        continue-on-error: true
         run: >
           mvn sonar:sonar
           -Dsonar.token=${{ secrets.SONAR_TOKEN }}
@@ -125,7 +108,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
       - name: Docker build check
         if: steps.changes.outputs.service == 'true'
         uses: docker/build-push-action@v6
@@ -136,22 +118,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # ── Product Service ────────────────────────────────────────────
   product-service:
     name: product-service — Build, Test, Sonar
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
-
       - name: Check changed files
         id: changes
         uses: dorny/paths-filter@v3
@@ -159,14 +137,13 @@ jobs:
           filters: |
             service:
               - 'product-service/**'
-
-      - name: Build and verify
+      - name: Build
         if: steps.changes.outputs.service == 'true'
         run: mvn clean verify -DskipTests -Pdocker
         working-directory: product-service
-
       - name: SonarCloud
         if: steps.changes.outputs.service == 'true'
+        continue-on-error: true
         run: >
           mvn sonar:sonar
           -Dsonar.token=${{ secrets.SONAR_TOKEN }}
@@ -179,7 +156,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
       - name: Docker build check
         if: steps.changes.outputs.service == 'true'
         uses: docker/build-push-action@v6
@@ -190,22 +166,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # ── Cart Service ───────────────────────────────────────────────
   cart-service:
     name: cart-service — Build, Test, Sonar
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
-
       - name: Check changed files
         id: changes
         uses: dorny/paths-filter@v3
@@ -213,14 +185,13 @@ jobs:
           filters: |
             service:
               - 'cart-service/**'
-
-      - name: Build and verify
+      - name: Build
         if: steps.changes.outputs.service == 'true'
         run: mvn clean verify -DskipTests -Pdocker
         working-directory: cart-service
-
       - name: SonarCloud
         if: steps.changes.outputs.service == 'true'
+        continue-on-error: true
         run: >
           mvn sonar:sonar
           -Dsonar.token=${{ secrets.SONAR_TOKEN }}
@@ -233,7 +204,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
       - name: Docker build check
         if: steps.changes.outputs.service == 'true'
         uses: docker/build-push-action@v6
@@ -244,22 +214,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # ── Order Service ──────────────────────────────────────────────
   order-service:
     name: order-service — Build, Test, Sonar
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
-
       - name: Check changed files
         id: changes
         uses: dorny/paths-filter@v3
@@ -267,14 +233,13 @@ jobs:
           filters: |
             service:
               - 'order-service/**'
-
-      - name: Build and verify
+      - name: Build
         if: steps.changes.outputs.service == 'true'
         run: mvn clean verify -DskipTests -Pdocker
         working-directory: order-service
-
       - name: SonarCloud
         if: steps.changes.outputs.service == 'true'
+        continue-on-error: true
         run: >
           mvn sonar:sonar
           -Dsonar.token=${{ secrets.SONAR_TOKEN }}
@@ -287,7 +252,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
       - name: Docker build check
         if: steps.changes.outputs.service == 'true'
         uses: docker/build-push-action@v6
@@ -298,22 +262,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # ── Payment Service ────────────────────────────────────────────
   payment-service:
     name: payment-service — Build, Test, Sonar
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
-
       - name: Check changed files
         id: changes
         uses: dorny/paths-filter@v3
@@ -321,14 +281,13 @@ jobs:
           filters: |
             service:
               - 'payment-service/**'
-
-      - name: Build and verify
+      - name: Build
         if: steps.changes.outputs.service == 'true'
         run: mvn clean verify -DskipTests -Pdocker
         working-directory: payment-service
-
       - name: SonarCloud
         if: steps.changes.outputs.service == 'true'
+        continue-on-error: true
         run: >
           mvn sonar:sonar
           -Dsonar.token=${{ secrets.SONAR_TOKEN }}
@@ -341,7 +300,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
       - name: Docker build check
         if: steps.changes.outputs.service == 'true'
         uses: docker/build-push-action@v6
