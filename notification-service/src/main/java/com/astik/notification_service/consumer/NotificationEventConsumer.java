@@ -1,5 +1,7 @@
 package com.astik.notification_service.consumer;
 
+import com.astik.notification_service.dto.EmailVerificationEvent;
+import com.astik.notification_service.dto.PasswordResetEvent;
 import com.astik.notification_service.dto.UserRegisteredEvent;
 import com.astik.notification_service.service.EmailService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,39 +19,69 @@ import org.springframework.stereotype.Component;
 public class NotificationEventConsumer {
 
     private final EmailService emailService;
-    private final ObjectMapper objectMapper;   // inject karenge
+    private final ObjectMapper objectMapper;
 
+    // ── User Registered ───────────────────────────────────────────
     @KafkaListener(
             topics  = "${app.kafka.topics.user-registered}",
             groupId = "notification-group"
     )
     public void handleUserRegistered(
-            @Payload String message,           // String receive karo
+            @Payload String message,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
-            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
             @Header(KafkaHeaders.OFFSET) long offset) {
-
-        log.info("Event received | topic={} partition={} offset={}",
-                topic, partition, offset);
-
+        log.info("user.registered received | offset={}", offset);
         try {
-            // Manually parse karo String → UserRegisteredEvent
             UserRegisteredEvent event = objectMapper
                     .readValue(message, UserRegisteredEvent.class);
-
-            log.info("Parsed event | userId={} email={}",
-                    event.userId(), event.email());
-
             emailService.sendWelcomeEmail(event);
-
         } catch (Exception e) {
-            log.error("Failed to parse event | message={} error={}",
-                    message, e.getMessage());
-            throw new RuntimeException("Event parsing failed", e);
+            log.error("Failed to process user.registered | error={}", e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
-    // DLT consumer
+    // ── Email Verification ────────────────────────────────────────
+    @KafkaListener(
+            topics  = "${app.kafka.topics.email-verification}",
+            groupId = "notification-group"
+    )
+    public void handleEmailVerification(
+            @Payload String message,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
+            @Header(KafkaHeaders.OFFSET) long offset) {
+        log.info("email.verification received | offset={}", offset);
+        try {
+            EmailVerificationEvent event = objectMapper
+                    .readValue(message, EmailVerificationEvent.class);
+            emailService.sendVerificationEmail(event);
+        } catch (Exception e) {
+            log.error("Failed to process email.verification | error={}", e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    // ── Password Reset ────────────────────────────────────────────
+    @KafkaListener(
+            topics  = "${app.kafka.topics.password-reset}",
+            groupId = "notification-group"
+    )
+    public void handlePasswordReset(
+            @Payload String message,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
+            @Header(KafkaHeaders.OFFSET) long offset) {
+        log.info("password.reset received | offset={}", offset);
+        try {
+            PasswordResetEvent event = objectMapper
+                    .readValue(message, PasswordResetEvent.class);
+            emailService.sendPasswordResetEmail(event);
+        } catch (Exception e) {
+            log.error("Failed to process password.reset | error={}", e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    // ── DLT ──────────────────────────────────────────────────────
     @KafkaListener(
             topics  = "${app.kafka.topics.user-registered}.DLT",
             groupId = "notification-dlt-group"
@@ -57,6 +89,6 @@ public class NotificationEventConsumer {
     public void handleDLT(
             @Payload byte[] message,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
-        log.error("Message in DLT | topic={} — manual check needed", topic);
+        log.error("Message in DLT | topic={}", topic);
     }
 }

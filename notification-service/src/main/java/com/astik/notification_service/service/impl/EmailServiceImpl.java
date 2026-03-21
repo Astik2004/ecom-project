@@ -1,5 +1,7 @@
 package com.astik.notification_service.service.impl;
 
+import com.astik.notification_service.dto.EmailVerificationEvent;
+import com.astik.notification_service.dto.PasswordResetEvent;
 import com.astik.notification_service.dto.UserRegisteredEvent;
 import com.astik.notification_service.service.EmailService;
 import jakarta.mail.MessagingException;
@@ -31,7 +33,7 @@ public class EmailServiceImpl implements EmailService {
     private String fromName;
 
     @Override
-    @Async   // email sending async hai — consumer block nahi hoga
+    @Async
     public void sendWelcomeEmail(UserRegisteredEvent event) {
         try {
             // Thymeleaf context — template mein variables pass karo
@@ -62,23 +64,46 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+
     @Override
     @Async
-    public void sendPasswordResetEmail(String email, String resetToken) {
+    public void sendVerificationEmail(EmailVerificationEvent event) {
         try {
             Context context = new Context();
-            context.setVariable("resetToken", resetToken);
-            context.setVariable("resetLink",
-                    "http://localhost:3000/reset-password?token=" + resetToken);
+            context.setVariable("firstName",        event.firstName());
+            context.setVariable("email",            event.email());
+            context.setVariable("verificationLink",
+                    "http://localhost:8081/api/v1/auth/verify-email?token="
+                            + event.verificationToken());
+            context.setVariable("expiresAt",        event.expiresAt());
 
-            String htmlContent = templateEngine
-                    .process("password-reset-email", context);
+            String html = templateEngine.process("verification-email", context);
+            sendEmail(event.email(), "Verify Your Email Address", html);
 
-            sendEmail(email, "Password Reset Request", htmlContent);
-            log.info("Password reset email sent | email={}", email);
-
+            log.info("Verification email sent | userId={}", event.userId());
         } catch (Exception e) {
-            log.error("Failed to send password reset email | email={}", email, e);
+            log.error("Failed to send verification email | userId={}", event.userId(), e);
+            throw new RuntimeException("Email sending failed", e);
+        }
+    }
+
+    @Override
+    @Async
+    public void sendPasswordResetEmail(PasswordResetEvent event) {
+        try {
+            Context context = new Context();
+            context.setVariable("firstName",  event.firstName());
+            context.setVariable("resetLink",
+                    "http://localhost:8081/api/v1/auth/reset-password?token="
+                            + event.resetToken());
+            context.setVariable("expiresAt",  event.expiresAt());
+
+            String html = templateEngine.process("password-reset-email", context);
+            sendEmail(event.email(), "Reset Your Password", html);
+
+            log.info("Password reset email sent | userId={}", event.userId());
+        } catch (Exception e) {
+            log.error("Failed to send password reset email | userId={}", event.userId(), e);
             throw new RuntimeException("Email sending failed", e);
         }
     }
