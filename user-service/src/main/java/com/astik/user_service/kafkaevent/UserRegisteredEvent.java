@@ -11,7 +11,6 @@ public record UserRegisteredEvent(
         String role,
         LocalDateTime registeredAt
 ) {
-    // Convenience factory method
     public static UserRegisteredEvent of(UUID userId, String firstName,
                                          String lastName, String email, String role) {
         return new UserRegisteredEvent(userId, firstName, lastName,

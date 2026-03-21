@@ -1,4 +1,17 @@
 package com.astik.user_service.dto.request;
 
-public class ResetPasswordRequest {
-}
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
+public record ResetPasswordRequest(
+        @NotBlank String token,
+
+        @NotBlank
+        @Size(min = 8, message = "Password must be at least 8 characters")
+        @Pattern(
+                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).+$",
+                message = "Password must contain uppercase, lowercase, digit and special character"
+        )
+        String newPassword
+) {}
