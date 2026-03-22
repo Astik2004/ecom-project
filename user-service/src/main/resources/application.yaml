@@ -55,7 +55,16 @@ spring:
 server:
   port: 8081
 
-# ── JWT — matches YOUR JwtUtils @Value annotations exactly ──────
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
 application:
   security:
     jwt:
@@ -80,11 +89,14 @@ app:
 # ── Swagger UI ───────────────────────────────────────────────────
 springdoc:
   swagger-ui:
-    path: /api-docs.html
+    path: /swagger-ui.html
   api-docs:
-    path: /api-spec
+    path: /v1/api-docs
+    enabled: true
   show-actuator: true
   writer-with-default-pretty-printer: true
+  override-with-generic-response: false
+
 
 # ── Actuator ─────────────────────────────────────────────────────
 management:

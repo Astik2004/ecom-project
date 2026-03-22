@@ -6,6 +6,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
+	<!-- Parent -->
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
@@ -13,23 +14,23 @@
 		<relativePath/>
 	</parent>
 
+	<!-- Project Info -->
 	<groupId>com.astik</groupId>
 	<artifactId>notification-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>notification-service</name>
 	<description>Notification Service — Ecommerce Project</description>
 
+	<!-- Properties -->
 	<properties>
 		<java.version>21</java.version>
 		<spring-cloud.version>2025.1.0</spring-cloud.version>
-		<sonar.projectKey>Astik2004_ecom-project</sonar.projectKey>
-		<sonar.organization>astik2004</sonar.organization>
-		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 	</properties>
 
+	<!-- Dependencies -->
 	<dependencies>
 
-		<!-- Web — for actuator endpoints -->
+		<!-- Web -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -47,7 +48,7 @@
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 
-		<!-- Thymeleaf — HTML email templates -->
+		<!-- Thymeleaf (Email Templates) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
@@ -68,6 +69,22 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- ✅ Eureka Client (Added) -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
+
+		<!-- Jackson (for JSON + Java Time) -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
 		</dependency>
 
 		<!-- Lombok -->
@@ -96,18 +113,10 @@
 			<artifactId>spring-kafka-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- pom.xml mein ye add karo -->
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.datatype</groupId>
-			<artifactId>jackson-datatype-jsr310</artifactId>
-		</dependency>
 
 	</dependencies>
 
+	<!-- Dependency Management -->
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -120,23 +129,11 @@
 		</dependencies>
 	</dependencyManagement>
 
-	<profiles>
-		<profile>
-			<id>local</id>
-			<properties>
-				<spring.profiles.active>local</spring.profiles.active>
-			</properties>
-		</profile>
-		<profile>
-			<id>docker</id>
-			<properties>
-				<spring.profiles.active>docker</spring.profiles.active>
-			</properties>
-		</profile>
-	</profiles>
-
+	<!-- Build -->
 	<build>
 		<plugins>
+
+			<!-- Compiler -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -151,6 +148,8 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
+
+			<!-- Spring Boot -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -163,12 +162,9 @@
 					</excludes>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.sonarsource.scanner.maven</groupId>
-				<artifactId>sonar-maven-plugin</artifactId>
-				<version>5.5.0.6356</version>
-			</plugin>
+
 		</plugins>
+
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>

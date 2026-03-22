@@ -40,42 +40,48 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsSource()))
-                .headers(h -> h.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .headers(h -> h.frameOptions(
+                        HeadersConfigurer.FrameOptionsConfig::disable)) // DENY hataya
+                .sessionManagement(s -> s.sessionCreationPolicy(
+                        SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
 
-                        // 👇 YAHAN CHANGES KIYE HAIN 👇
+                        // Swagger allow karo
                         .requestMatchers(
-                                "/api-spec/**",           // Aapka YAML wala custom JSON path
-                                "/api-docs.html",         // Aapka YAML wala custom UI HTML path
-                                "/swagger-ui/**",         // Swagger UI ke internal CSS/JS ke liye zaruri
-                                "/v3/api-docs/**",        // Safe side ke liye default paths
+                                "/v1/api-docs",
+                                "/v1/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me").hasAnyRole("CUSTOMER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/users/me").hasAnyRole("CUSTOMER", "ADMIN")
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authProvider())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilter,
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
     public AuthenticationProvider authProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+        DaoAuthenticationProvider provider =
+                new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }
 
     @Bean
-    public AuthenticationManager authManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authManager(
+            AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
@@ -87,13 +93,25 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:4200"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
-        config.setExposedHeaders(List.of("Authorization"));
+
+        // Gateway aur frontend dono allow karo
+        config.setAllowedOriginPatterns(List.of("*"));
+
+        config.setAllowedMethods(List.of(
+                "GET", "POST", "PUT",
+                "PATCH", "DELETE", "OPTIONS"));
+
+        config.setAllowedHeaders(List.of("*"));
+
+        config.setExposedHeaders(List.of(
+                "Authorization",
+                "X-Request-Id"));
+
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
