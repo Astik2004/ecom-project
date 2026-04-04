@@ -1,14 +1,16 @@
-// exception/GlobalExceptionHandler.java
 package com.astik.user_service.exception;
 
-import com.astik.user_service.dto.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.net.URI;
+import java.time.Instant;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -17,55 +19,63 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserAlreadyExistsException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiResponse<?> handleUserExists(UserAlreadyExistsException ex) {
-        return ApiResponse.failure(ex.getMessage());
+    public ProblemDetail handleUserExists(UserAlreadyExistsException ex, HttpServletRequest req) {
+        return createProblemDetail(ex, HttpStatus.CONFLICT, "User Already Exists", req.getRequestURI());
     }
 
     @ExceptionHandler(UserNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ApiResponse<?> handleUserNotFound(UserNotFoundException ex) {
-        return ApiResponse.failure(ex.getMessage());
+    public ProblemDetail handleUserNotFound(UserNotFoundException ex, HttpServletRequest req) {
+        return createProblemDetail(ex, HttpStatus.NOT_FOUND, "User Not Found", req.getRequestURI());
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ApiResponse<?> handleInvalidCredentials(InvalidCredentialsException ex) {
-        return ApiResponse.failure(ex.getMessage());
+    public ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex, HttpServletRequest req) {
+        return createProblemDetail(ex, HttpStatus.UNAUTHORIZED, "Invalid Credentials", req.getRequestURI());
     }
 
     @ExceptionHandler(AccountLockedException.class)
-    @ResponseStatus(HttpStatus.LOCKED)
-    public ApiResponse<?> handleAccountLocked(AccountLockedException ex) {
-        return ApiResponse.failure(ex.getMessage());
+    public ProblemDetail handleAccountLocked(AccountLockedException ex, HttpServletRequest req) {
+        return createProblemDetail(ex, HttpStatus.LOCKED, "Account Locked", req.getRequestURI());
     }
 
     @ExceptionHandler(AccountInactiveException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ApiResponse<?> handleAccountInactive(AccountInactiveException ex) {
-        return ApiResponse.failure(ex.getMessage());
+    public ProblemDetail handleAccountInactive(AccountInactiveException ex, HttpServletRequest req) {
+        return createProblemDetail(ex, HttpStatus.FORBIDDEN, "Account Inactive", req.getRequestURI());
     }
 
     @ExceptionHandler(InvalidTokenException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ApiResponse<?> handleInvalidToken(InvalidTokenException ex) {
-        return ApiResponse.failure(ex.getMessage());
+    public ProblemDetail handleInvalidToken(InvalidTokenException ex, HttpServletRequest req) {
+        return createProblemDetail(ex, HttpStatus.UNAUTHORIZED, "Invalid Token", req.getRequestURI());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiResponse<?> handleValidation(MethodArgumentNotValidException ex) {
+    public ProblemDetail handleValidation(MethodArgumentNotValidException ex, HttpServletRequest req) {
+        ProblemDetail problemDetail = createProblemDetail(ex, HttpStatus.BAD_REQUEST, "Validation Failed", req.getRequestURI());
         Map<String, String> errors = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.toMap(FieldError::getField,
-                        FieldError::getDefaultMessage,
+                        err -> err.getDefaultMessage() != null ? err.getDefaultMessage() : "Invalid value",
                         (a, b) -> a));
-        return new ApiResponse<>(false, "Validation failed", errors, java.time.LocalDateTime.now());
+        problemDetail.setProperty("invalid_params", errors);
+        return problemDetail;
     }
 
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiResponse<?> handleGeneric(Exception ex, HttpServletRequest req) {
+    public ProblemDetail handleGeneric(Exception ex, HttpServletRequest req) {
         log.error("Unhandled exception at {}", req.getRequestURI(), ex);
-        return ApiResponse.failure("An unexpected error occurred");
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+        pd.setTitle("Internal Server Error");
+        pd.setType(URI.create("about:blank"));
+        pd.setInstance(URI.create(req.getRequestURI()));
+        pd.setProperty("timestamp", Instant.now().toString());
+        return pd;
+    }
+
+    private ProblemDetail createProblemDetail(Exception ex, HttpStatus status, String title, String uri) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
+        pd.setTitle(title);
+        pd.setType(URI.create("about:blank"));
+        pd.setInstance(URI.create(uri));
+        pd.setProperty("timestamp", Instant.now().toString());
+        return pd;
     }
 }

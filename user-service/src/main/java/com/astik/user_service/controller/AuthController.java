@@ -6,7 +6,10 @@ import com.astik.user_service.dto.request.RegisterRequest;
 import com.astik.user_service.dto.request.ResetPasswordRequest;
 import com.astik.user_service.dto.response.ApiResponse;
 import com.astik.user_service.dto.response.AuthResponse;
-import com.astik.user_service.service.AuthService;
+import com.astik.user_service.service.usecase.AccountRecoveryUseCase;
+import com.astik.user_service.service.usecase.LoginUserUseCase;
+import com.astik.user_service.service.usecase.RegisterUserUseCase;
+import com.astik.user_service.service.usecase.TokenManagementUseCase;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,13 +22,16 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final RegisterUserUseCase registerUserUseCase;
+    private final LoginUserUseCase loginUserUseCase;
+    private final TokenManagementUseCase tokenManagementUseCase;
+    private final AccountRecoveryUseCase accountRecoveryUseCase;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(
             @Valid @RequestBody RegisterRequest request) {
 
-        AuthResponse data = authService.register(request);
+        AuthResponse data = registerUserUseCase.register(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("User registered successfully", data));
@@ -36,7 +42,7 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest) {
 
-        AuthResponse data = authService.login(
+        AuthResponse data = loginUserUseCase.login(
                 request,
                 httpRequest.getRemoteAddr(),
                 httpRequest.getHeader("User-Agent")
@@ -50,21 +56,21 @@ public class AuthController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("Token refreshed",
-                        authService.refreshToken(refreshToken)));
+                        tokenManagementUseCase.refreshToken(refreshToken)));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
             @RequestHeader("Refresh-Token") String refreshToken) {
 
-        authService.logout(refreshToken);
+        tokenManagementUseCase.logout(refreshToken);
         return ResponseEntity.ok(ApiResponse.success("Logged out successfully"));
     }
 
     @PostMapping("/verify-email")
     public ResponseEntity<ApiResponse<Void>> verifyEmail(
             @RequestParam String token) {
-        authService.verifyEmail(token);
+        accountRecoveryUseCase.verifyEmail(token);
         return ResponseEntity.ok(
                 ApiResponse.success("Email verified successfully"));
     }
@@ -72,7 +78,7 @@ public class AuthController {
     @PostMapping("/resend-verification")
     public ResponseEntity<ApiResponse<Void>> resendVerification(
             @RequestParam String email) {
-        authService.resendVerificationEmail(email);
+        accountRecoveryUseCase.resendVerificationEmail(email);
         return ResponseEntity.ok(
                 ApiResponse.success("Verification email sent"));
     }
@@ -80,7 +86,7 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<Void>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request) {
-        authService.forgotPassword(request.email());
+        accountRecoveryUseCase.forgotPassword(request.email());
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "If this email exists, a reset link has been sent"));
@@ -89,7 +95,7 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request) {
-        authService.resetPassword(request);
+        accountRecoveryUseCase.resetPassword(request);
         return ResponseEntity.ok(
                 ApiResponse.success("Password reset successfully"));
     }

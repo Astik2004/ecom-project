@@ -18,9 +18,8 @@ spring:
           min-idle: 2
 
   cloud:
-    cloud:
-      gateway:
-        discovery:
+    gateway:
+      discovery:
           locator:
             enabled: true
             lower-case-service-id: true
