@@ -19,21 +19,27 @@ spring:
 
   cloud:
     gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
       discovery:
-          locator:
-            enabled: true
-            lower-case-service-id: true
-        default-filters:
-          - name: RequestSize
-            args:
-              maxSize: 10MB
-          - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers
-        httpclient:
-          connect-timeout: 3000
-          response-timeout: 30s
-          pool:
-            type: elastic
-            max-idle-time: 15s
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      default-filters:
+        - name: RequestSize
+          args:
+            maxSize: 10MB
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers
+      httpclient:
+        connect-timeout: 3000
+        response-timeout: 30s
+        pool:
+          type: elastic
+          max-idle-time: 15s
 
 
 springdoc:

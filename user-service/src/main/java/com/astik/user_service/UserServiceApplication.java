@@ -11,6 +11,7 @@ import java.util.TimeZone;
 
 @SpringBootApplication
 @EnableDiscoveryClient
+@EnableJpaAuditing
 @EnableConfigurationProperties(AccountProperties.class)
 public class UserServiceApplication {
 
